@@ -6,3 +6,136 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  password      String
+  bio           String?
+  profileImage  String?
+  role          Role           @default(USER)
+  reputation    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  questions     Question[]
+  answers       Answer[]
+  comments      Comment[]
+  votes         Vote[]
+  refreshTokens RefreshToken[]
+}
+
+model Question {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String
+  authorId    Int
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+  comments    Comment[]
+  votes       Vote[]
+  questionTags QuestionTag[]
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Answer {
+  id          Int        @id @default(autoincrement())
+  content     String
+  questionId  Int
+  authorId    Int
+  isAccepted  Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  question    Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  votes       Vote[]
+
+  @@index([questionId])
+  @@index([authorId])
+}
+
+model Comment {
+  id          Int       @id @default(autoincrement())
+  content     String
+  authorId    Int
+  questionId  Int?
+  answerId    Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  question    Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer      Answer?   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([questionId])
+  @@index([answerId])
+}
+
+model Vote {
+  id          Int       @id @default(autoincrement())
+  type        VoteType
+  userId      Int
+  questionId  Int?
+  answerId    Int?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question    Question? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer      Answer?   @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@unique([userId, answerId])
+  @@index([questionId])
+  @@index([answerId])
+}
+
+model Tag {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  createdAt     DateTime      @default(now())
+
+  questionTags  QuestionTag[]
+}
+
+model QuestionTag {
+  questionId Int
+  tagId      Int
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, tagId])
+  @@index([tagId])
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

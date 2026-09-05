@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+const prisma = require("./config/prisma");
+
 const app = express();
 
 // Security
@@ -18,9 +20,28 @@ app.use(express.json());
 
 // Test route
 app.get("/", (req, res) => {
-    res.json({
-        message: "Welcome to KnowledgeHub API"
+  res.json({
+    message: "Welcome to KnowledgeHub API"
+  });
+});
+
+// Database test route
+app.get("/api/health/db", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.status(200).json({
+      success: true,
+      message: "Database connection successful"
     });
+  } catch (error) {
+    console.error("Database connection failed:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Database connection failed"
+    });
+  }
 });
 
 module.exports = app;
