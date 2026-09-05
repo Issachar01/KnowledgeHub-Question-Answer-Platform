@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const prisma = require("../config/prisma");
 //jwt token
 const { generateAccessToken } = require("../utils/jwt");
+//refresh token
+const { createRefreshToken } = require("./refreshTokenService");
 
 const registerUser = async ({ name, email, password }) => {
   // 1. Check if the email already exists
@@ -41,29 +43,26 @@ const registerUser = async ({ name, email, password }) => {
 };
 
 const loginUser = async ({ email, password }) => {
-  // 1. Find user by email
   const user = await prisma.user.findUnique({
     where: {
       email
     }
   });
 
-  // 2. Check if user exists
   if (!user) {
     throw new Error("Invalid email or password");
   }
 
-  // 3. Compare password with stored hash
   const passwordMatch = await bcrypt.compare(password, user.password);
 
   if (!passwordMatch) {
     throw new Error("Invalid email or password");
   }
 
-  // 4. Generate access token
   const accessToken = generateAccessToken(user);
 
-  // 5. Return user information and token
+  const refreshToken = await createRefreshToken(user.id);
+
   return {
     user: {
       id: user.id,
@@ -75,10 +74,10 @@ const loginUser = async ({ email, password }) => {
       reputation: user.reputation,
       createdAt: user.createdAt
     },
-    accessToken
+    accessToken,
+    refreshToken: refreshToken.token
   };
 };
-
 module.exports = {
   registerUser,
   loginUser
