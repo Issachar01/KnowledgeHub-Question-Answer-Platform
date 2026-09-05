@@ -5,7 +5,9 @@ const {
 
 const {
   registerUser,
-  loginUser
+  loginUser,
+  refreshAccessToken,
+  logoutUser
 } = require("../services/authService");
 
 const register = async (req, res) => {
@@ -90,8 +92,81 @@ const login = async (req, res) => {
   }
 };
 
+const refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required"
+      });
+    }
+
+    const data = await refreshAccessToken(refreshToken);
+
+    res.status(200).json({
+      success: true,
+      message: "Access token refreshed successfully",
+      data
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+
+    if (
+      error.message === "Invalid refresh token" ||
+      error.message === "Refresh token has expired"
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+//logout
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required"
+      });
+    }
+
+    await logoutUser(refreshToken);
+
+    res.status(200).json({
+      success: true,
+      message: "Logout successful"
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    if (error.message === "Invalid refresh token") {
+      return res.status(401).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
 
 module.exports = {
   register,
-  login
+  login,
+  refresh,
+  logout
 };

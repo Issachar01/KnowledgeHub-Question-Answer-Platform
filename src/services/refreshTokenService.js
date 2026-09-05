@@ -24,6 +24,53 @@ const createRefreshToken = async (userId) => {
   return refreshToken;
 };
 
+const getValidRefreshToken = async (token) => {
+  const refreshToken = await prisma.refreshToken.findUnique({
+    where: {
+      token
+    },
+    include: {
+      user: true
+    }
+  });
+
+  if (!refreshToken) {
+    throw new Error("Invalid refresh token");
+  }
+
+  if (refreshToken.expiresAt < new Date()) {
+    await prisma.refreshToken.delete({
+      where: {
+        id: refreshToken.id
+      }
+    });
+
+    throw new Error("Refresh token has expired");
+  }
+
+  return refreshToken;
+};
+
+const revokeRefreshToken = async (token) => {
+  const refreshToken = await prisma.refreshToken.findUnique({
+    where: {
+      token
+    }
+  });
+
+  if (!refreshToken) {
+    throw new Error("Invalid refresh token");
+  }
+
+  await prisma.refreshToken.delete({
+    where: {
+      id: refreshToken.id
+    }
+  });
+};
+
 module.exports = {
-  createRefreshToken
+  createRefreshToken,
+  getValidRefreshToken,
+  revokeRefreshToken
 };

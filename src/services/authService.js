@@ -3,7 +3,11 @@ const prisma = require("../config/prisma");
 //jwt token
 const { generateAccessToken } = require("../utils/jwt");
 //refresh token
-const { createRefreshToken } = require("./refreshTokenService");
+const {
+  createRefreshToken,
+  getValidRefreshToken,
+  revokeRefreshToken
+} = require("./refreshTokenService");
 
 const registerUser = async ({ name, email, password }) => {
   // 1. Check if the email already exists
@@ -78,7 +82,25 @@ const loginUser = async ({ email, password }) => {
     refreshToken: refreshToken.token
   };
 };
+
+//
+const refreshAccessToken = async (token) => {
+  const refreshToken = await getValidRefreshToken(token);
+
+  const accessToken = generateAccessToken(refreshToken.user);
+
+  return {
+    accessToken
+  };
+};
+
+const logoutUser = async (refreshToken) => {
+  await revokeRefreshToken(refreshToken);
+};
+
 module.exports = {
   registerUser,
-  loginUser
+  loginUser,
+  refreshAccessToken,
+  logoutUser
 };
