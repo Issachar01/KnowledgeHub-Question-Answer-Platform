@@ -3,9 +3,12 @@ const cors = require("cors");
 const helmet = require("helmet");
 const dotenv = require("dotenv");
 
+
 dotenv.config();
 
 const prisma = require("./config/prisma");
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -43,5 +46,10 @@ app.get("/api/health/db", async (req, res) => {
     });
   }
 });
+
+// Authentication routes
+app.use("/api/auth", authRoutes);
+//user routes
+app.use("/api/users", userRoutes);
 
 module.exports = app;
