@@ -1,13 +1,8 @@
-// controllers/answerController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const { sendEmail } = require('../utils/sendEmail');
-
 const createAnswer = async (req, res, next) => {
   try {
-    const { questionId } = req.params;
+    const questionId = parseInt(req.params.questionId);
     const { content } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.id; // ensure your auth middleware assigns numeric user id
 
     const question = await prisma.question.findUnique({
       where: { id: questionId },
@@ -19,20 +14,14 @@ const createAnswer = async (req, res, next) => {
     }
 
     const answer = await prisma.answer.create({
-      data: {
-        content,
-        questionId,
-        authorId: userId
-      }
+      data: { content, questionId, authorId: userId }
     });
 
-    // Update user reputation (+10 for answering)
     await prisma.user.update({
       where: { id: userId },
       data: { reputation: { increment: 10 } }
     });
 
-    // Send email notification to question owner
     if (question.author.email && question.authorId !== userId) {
       await sendEmail({
         email: question.author.email,
@@ -46,62 +35,3 @@ const createAnswer = async (req, res, next) => {
     next(error);
   }
 };
-
-const getAnswersByQuestion = async (req, res, next) => {
-  try {
-    const { questionId } = req.params;
-    const answers = await prisma.answer.findMany({
-      where: { questionId },
-      include: { author: { select: { id: true, name: true, profileImage: true, reputation: true } } },
-      orderBy: [{ isAccepted: 'desc' }, { createdAt: 'desc' }]
-    });
-
-    res.status(200).json({ success: true, count: answers.length, data: answers });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const updateAnswer = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { content } = req.body;
-    const userId = req.user.id;
-
-    const answer = await prisma.answer.findUnique({ where: { id } });
-    if (!answer) return res.status(404).json({ error: 'Answer not found' });
-    if (answer.authorId !== userId && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Unauthorized to edit this answer' });
-    }
-
-    const updated = await prisma.answer.update({
-      where: { id },
-      data: { content }
-    });
-
-    res.status(200).json({ success: true, data: updated });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteAnswer = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    const answer = await prisma.answer.findUnique({ where: { id } });
-    if (!answer) return res.status(404).json({ error: 'Answer not found' });
-    if (answer.authorId !== userId && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Unauthorized to delete this answer' });
-    }
-
-    await prisma.answer.delete({ where: { id } });
-
-    res.status(200).json({ success: true, message: 'Answer deleted successfully' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = { createAnswer, getAnswersByQuestion, updateAnswer, deleteAnswer };

@@ -1,7 +1,3 @@
-// controllers/questionQueryController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-
 const getFilteredQuestions = async (req, res, next) => {
   try {
     const { search, page = 1, limit = 10, sort = 'newest' } = req.query;
@@ -13,7 +9,7 @@ const getFilteredQuestions = async (req, res, next) => {
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } },
-          { tags: { some: { name: { contains: search, mode: 'insensitive' } } } }
+          { questionTags: { some: { tag: { name: { contains: search, mode: 'insensitive' } } } } }
         ]
       };
     }
@@ -33,7 +29,7 @@ const getFilteredQuestions = async (req, res, next) => {
         orderBy,
         include: {
           author: { select: { id: true, name: true, profileImage: true } },
-          tags: true,
+          questionTags: { include: { tag: true } },
           _count: { select: { answers: true, votes: true } }
         }
       }),
@@ -54,5 +50,3 @@ const getFilteredQuestions = async (req, res, next) => {
     next(error);
   }
 };
-
-module.exports = { getFilteredQuestions };
