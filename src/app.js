@@ -9,6 +9,7 @@ dotenv.config();
 const prisma = require("./config/prisma");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const tagRoutes = require("./routes/tagRoutes");
 
 const app = express();
 
@@ -51,5 +52,7 @@ app.get("/api/health/db", async (req, res) => {
 app.use("/api/auth", authRoutes);
 //user routes
 app.use("/api/users", userRoutes);
+// Tag routes
+app.use("/api/tags", tagRoutes);
 
 module.exports = app;
