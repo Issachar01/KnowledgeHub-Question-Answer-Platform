@@ -3,13 +3,13 @@ const cors = require("cors");
 const helmet = require("helmet");
 const dotenv = require("dotenv");
 
-
 dotenv.config();
 
 const prisma = require("./config/prisma");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const questionRoutes = require("./routes/questionRoutes");
+const tagRoutes = require("./routes/tagRoutes");
 
 const app = express();
 
@@ -50,9 +50,14 @@ app.get("/api/health/db", async (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
-//user routes
+
+// User routes
 app.use("/api/users", userRoutes);
-//question routes
+
+// Question routes
 app.use("/api/questions", questionRoutes);
+
+// Tag routes
+app.use("/api/tags", tagRoutes);
 
 module.exports = app;
