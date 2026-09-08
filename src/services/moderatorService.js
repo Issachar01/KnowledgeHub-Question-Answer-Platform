@@ -3,7 +3,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const getAllReports = async () => {
+const getReports = async () => {
   return await prisma.report.findMany({
     include: {
       reporter: { select: { id: true, name: true, email: true } },
@@ -13,7 +13,7 @@ const getAllReports = async () => {
   });
 };
 
-const updateReportStatus = async (reportId, status) => {
+const resolveReport = async (reportId, status) => {
   const report = await prisma.report.findUnique({
     where: { id: parseInt(reportId) }
   });
@@ -28,7 +28,7 @@ const updateReportStatus = async (reportId, status) => {
   });
 };
 
-const suspendUser = async (userId) => {
+const toggleUserSuspension = async (userId, isBanned) => {
   const user = await prisma.user.findUnique({
     where: { id: parseInt(userId) }
   });
@@ -37,9 +37,11 @@ const suspendUser = async (userId) => {
     throw new Error('User not found');
   }
 
+  const targetStatus = isBanned !== undefined ? isBanned : !user.isBanned;
+
   return await prisma.user.update({
     where: { id: parseInt(userId) },
-    data: { isBanned: !user.isBanned },
+    data: { isBanned: targetStatus },
     select: { id: true, name: true, email: true, isBanned: true }
   });
 };
@@ -48,11 +50,11 @@ const deleteContent = async (contentType, contentId) => {
   const type = contentType.toUpperCase();
   const id = parseInt(contentId);
 
-  if (type === 'QUESTION') {
+  if (type === 'QUESTION' || type === 'QUESTIONS') {
     return await prisma.question.delete({ where: { id } });
-  } else if (type === 'ANSWER') {
+  } else if (type === 'ANSWER' || type === 'ANSWERS') {
     return await prisma.answer.delete({ where: { id } });
-  } else if (type === 'COMMENT') {
+  } else if (type === 'COMMENT' || type === 'COMMENTS') {
     return await prisma.comment.delete({ where: { id } });
   } else {
     throw new Error('Invalid content type');
@@ -60,8 +62,8 @@ const deleteContent = async (contentType, contentId) => {
 };
 
 module.exports = {
-  getAllReports,
-  updateReportStatus,
-  suspendUser,
+  getReports,
+  resolveReport,
+  toggleUserSuspension,
   deleteContent
 };
