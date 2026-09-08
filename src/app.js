@@ -3,6 +3,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const dotenv = require("dotenv");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 
 dotenv.config();
 
@@ -22,6 +24,12 @@ app.use(cors());
 
 // Parse JSON
 app.use(express.json());
+//swagger
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Test route
 app.get("/", (req, res) => {
@@ -51,11 +59,18 @@ app.get("/api/health/db", async (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
-//user routes
+
+// User routes
 app.use("/api/users", userRoutes);
 //answer routes
 app.use('/api', answerRoutes);
 //comment routes
 app.use('/api', commentRoutes);
+
+// Question routes
+app.use("/api/questions", questionRoutes);
+
+// Tag routes
+app.use("/api/tags", tagRoutes);
 
 module.exports = app;

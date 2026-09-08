@@ -27,6 +27,29 @@ const getUserProfile = async (userId) => {
   return user;
 };
 
+// Get a public user profile by ID
+const getPublicUserProfile = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId
+    },
+    select: {
+      id: true,
+      name: true,
+      bio: true,
+      profileImage: true,
+      reputation: true,
+      createdAt: true
+    }
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  return user;
+};
+
 const updateUserProfile = async (userId, data) => {
   const user = await prisma.user.update({
     where: {
@@ -97,6 +120,7 @@ const uploadProfileImage = async (userId, file) => {
 
 module.exports = {
   getUserProfile,
+  getPublicUserProfile,
   updateUserProfile,
   uploadProfileImage
 };
