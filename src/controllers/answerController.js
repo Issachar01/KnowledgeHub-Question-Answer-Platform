@@ -95,9 +95,35 @@ const deleteAnswer = async (req, res, next) => {
   }
 };
 
+const toggleAcceptAnswer = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id || req.user.userId;
+
+    const updatedAnswer = await answerService.toggleAcceptAnswer(id, userId);
+
+    res.json(updatedAnswer);
+  } catch (error) {
+    if (error.message === "Answer not found") {
+      return res.status(404).json({
+        error: error.message
+      });
+    }
+
+    if (error.message.includes("Only the question author") || error.message === "Unauthorized") {
+      return res.status(403).json({
+        error: error.message
+      });
+    }
+
+    next(error);
+  }
+};
+
 module.exports = {
   createAnswer,
   getAnswersByQuestion,
   updateAnswer,
-  deleteAnswer
+  deleteAnswer,
+  toggleAcceptAnswer
 };
