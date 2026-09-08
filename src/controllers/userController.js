@@ -10,9 +10,10 @@ const {
   updateProfileSchema
 } = require("../validators/userValidator");
 
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
   try {
     const userId = req.user.userId;
+
     const user = await getUserProfile(userId);
 
     res.status(200).json({
@@ -20,8 +21,6 @@ const getProfile = async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error("Get profile error:", error);
-
     if (error.message === "User not found") {
       return res.status(404).json({
         success: false,
@@ -29,14 +28,11 @@ const getProfile = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const getPublicProfile = async (req, res) => {
+const getPublicProfile = async (req, res, next) => {
   try {
     const userId = Number(req.params.id);
 
@@ -54,8 +50,6 @@ const getPublicProfile = async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error("Get public profile error:", error);
-
     if (error.message === "User not found") {
       return res.status(404).json({
         success: false,
@@ -63,19 +57,20 @@ const getPublicProfile = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   try {
     const validatedData = updateProfileSchema.parse(req.body);
+
     const userId = req.user.userId;
 
-    const user = await updateUserProfile(userId, validatedData);
+    const user = await updateUserProfile(
+      userId,
+      validatedData
+    );
 
     res.status(200).json({
       success: true,
@@ -83,8 +78,6 @@ const updateProfile = async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error("Update profile error:", error);
-
     if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
@@ -93,14 +86,11 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const uploadProfile = async (req, res) => {
+const uploadProfile = async (req, res, next) => {
   try {
     const userId = req.user.userId;
 
@@ -111,7 +101,10 @@ const uploadProfile = async (req, res) => {
       });
     }
 
-    const user = await uploadProfileImage(userId, req.file);
+    const user = await uploadProfileImage(
+      userId,
+      req.file
+    );
 
     res.status(200).json({
       success: true,
@@ -119,16 +112,11 @@ const uploadProfile = async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error("Profile image upload error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to upload profile image"
-    });
+    next(error);
   }
 };
 
-const getLeaderboard = async (req, res) => {
+const getLeaderboard = async (req, res, next) => {
   try {
     const users = await getLeaderboardUsers();
 
@@ -137,12 +125,7 @@ const getLeaderboard = async (req, res) => {
       data: users
     });
   } catch (error) {
-    console.error("Get leaderboard error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 

@@ -1,6 +1,6 @@
 // src/controllers/adminController.js
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
+const prisma = require("../config/prisma");
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -12,7 +12,7 @@ const getAllUsers = async (req, res, next) => {
         role: true,
         reputation: true,
         createdAt: true,
-        isVerified: true, // Replaced non-existent isBlocked with isVerified
+        isVerified: true,
         updatedAt: true
       }
     });
@@ -24,19 +24,15 @@ const getAllUsers = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Get all users error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 
 const toggleUserBlock = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const userId = parseInt(id, 10);
+    const userId = Number(req.params.id);
 
-    if (isNaN(userId)) {
+    if (!Number.isInteger(userId) || userId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid user ID format"
@@ -54,10 +50,12 @@ const toggleUserBlock = async (req, res, next) => {
       });
     }
 
-    // Toggle isVerified status as the block/active mechanism
+    // Using isVerified as the current block/active mechanism
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { isVerified: !user.isVerified },
+      data: {
+        isVerified: !user.isVerified
+      },
       select: {
         id: true,
         name: true,
@@ -74,33 +72,45 @@ const toggleUserBlock = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Toggle user block error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 
 const deleteInappropriateContent = async (req, res, next) => {
   try {
-    const { type, id } = req.params;
-    const contentId = parseInt(id, 10);
+    const { type } = req.params;
+    const contentId = Number(req.params.id);
 
-    if (isNaN(contentId)) {
+    if (!Number.isInteger(contentId) || contentId <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Invalid content ID format"
+        message: "Invalid content ID"
       });
     }
 
     const contentType = type.toLowerCase();
 
-    if (contentType === "question" || contentType === "questions") {
-      await prisma.question.delete({ where: { id: contentId } });
-    } else if (contentType === "answer" || contentType === "answers") {
-      await prisma.answer.delete({ where: { id: contentId } });
-    } else if (contentType === "comment" || contentType === "comments") {
-      await prisma.comment.delete({ where: { id: contentId } });
+    if (
+      contentType === "question" ||
+      contentType === "questions"
+    ) {
+      await prisma.question.delete({
+        where: { id: contentId }
+      });
+    } else if (
+      contentType === "answer" ||
+      contentType === "answers"
+    ) {
+      await prisma.answer.delete({
+        where: { id: contentId }
+      });
+    } else if (
+      contentType === "comment" ||
+      contentType === "comments"
+    ) {
+      await prisma.comment.delete({
+        where: { id: contentId }
+      });
     } else {
       return res.status(400).json({
         success: false,
@@ -114,22 +124,27 @@ const deleteInappropriateContent = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Admin delete content error:", error);
+
     if (error.code === "P2025") {
       return res.status(404).json({
         success: false,
         message: "Content not found"
       });
     }
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error"
-    });
+
+    next(error);
   }
 };
 
 const getPlatformStats = async (req, res, next) => {
   try {
-    const [totalUsers, totalQuestions, totalAnswers, totalComments, totalVotes] = await Promise.all([
+    const [
+      totalUsers,
+      totalQuestions,
+      totalAnswers,
+      totalComments,
+      totalVotes
+    ] = await Promise.all([
       prisma.user.count(),
       prisma.question.count(),
       prisma.answer.count(),
@@ -149,10 +164,7 @@ const getPlatformStats = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Get platform stats error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Internal server error"
-    });
+    next(error);
   }
 };
 

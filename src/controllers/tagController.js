@@ -4,8 +4,7 @@ const {
   getQuestionsByTagName
 } = require("../services/tagService");
 
-// Get all tags
-const getAll = async (req, res) => {
+const getAll = async (req, res, next) => {
   try {
     const tags = await getAllTags();
 
@@ -14,21 +13,15 @@ const getAll = async (req, res) => {
       data: tags
     });
   } catch (error) {
-    console.error("Get all tags error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-// Get one tag by ID
-const getOne = async (req, res) => {
+const getOne = async (req, res, next) => {
   try {
     const tagId = Number(req.params.id);
 
-    if (Number.isNaN(tagId)) {
+    if (!Number.isInteger(tagId) || tagId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid tag ID"
@@ -42,8 +35,6 @@ const getOne = async (req, res) => {
       data: tag
     });
   } catch (error) {
-    console.error("Get tag error:", error);
-
     if (error.message === "Tag not found") {
       return res.status(404).json({
         success: false,
@@ -51,15 +42,11 @@ const getOne = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-// Get questions by tag name
-const getByName = async (req, res) => {
+const getByName = async (req, res, next) => {
   try {
     const { name } = req.params;
 
@@ -77,8 +64,6 @@ const getByName = async (req, res) => {
       data: tag
     });
   } catch (error) {
-    console.error("Get questions by tag error:", error);
-
     if (error.message === "Tag not found") {
       return res.status(404).json({
         success: false,
@@ -86,10 +71,7 @@ const getByName = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 

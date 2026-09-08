@@ -10,24 +10,18 @@ const {
   logoutUser
 } = require("../services/authService");
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
-    // Validate request body
     const validatedData = registerSchema.parse(req.body);
 
-    // Create the user
     const user = await registerUser(validatedData);
 
-    // Send successful response
     res.status(201).json({
       success: true,
       message: "User registered successfully",
       data: user
     });
   } catch (error) {
-    console.error("Registration error:", error);
-
-    // Handle Zod validation errors
     if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
@@ -36,7 +30,6 @@ const register = async (req, res) => {
       });
     }
 
-    // Handle duplicate email
     if (error.message === "Email is already registered") {
       return res.status(409).json({
         success: false,
@@ -44,22 +37,14 @@ const register = async (req, res) => {
       });
     }
 
-    // Handle unexpected errors
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-
-//login 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
-    // Validate request body
     const validatedData = loginSchema.parse(req.body);
 
-    // Authenticate user
     const user = await loginUser(validatedData);
 
     res.status(200).json({
@@ -68,8 +53,6 @@ const login = async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error("Login error:", error);
-
     if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
@@ -85,14 +68,11 @@ const login = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const refresh = async (req, res) => {
+const refresh = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
 
@@ -111,8 +91,6 @@ const refresh = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Refresh token error:", error);
-
     if (
       error.message === "Invalid refresh token" ||
       error.message === "Refresh token has expired"
@@ -123,14 +101,11 @@ const refresh = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
-//logout
-const logout = async (req, res) => {
+
+const logout = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
 
@@ -148,8 +123,6 @@ const logout = async (req, res) => {
       message: "Logout successful"
     });
   } catch (error) {
-    console.error("Logout error:", error);
-
     if (error.message === "Invalid refresh token") {
       return res.status(401).json({
         success: false,
@@ -157,10 +130,7 @@ const logout = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 

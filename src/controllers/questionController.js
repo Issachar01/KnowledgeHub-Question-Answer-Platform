@@ -11,7 +11,7 @@ const {
   updateQuestionSchema
 } = require("../validators/questionValidator");
 
-const create = async (req, res) => {
+const create = async (req, res, next) => {
   try {
     const validatedData = createQuestionSchema.parse(req.body);
 
@@ -28,8 +28,6 @@ const create = async (req, res) => {
       data: question
     });
   } catch (error) {
-    console.error("Create question error:", error);
-
     if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
@@ -38,14 +36,11 @@ const create = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const getAll = async (req, res) => {
+const getAll = async (req, res, next) => {
   try {
     const questions = await getAllQuestions();
 
@@ -54,20 +49,15 @@ const getAll = async (req, res) => {
       data: questions
     });
   } catch (error) {
-    console.error("Get all questions error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const getOne = async (req, res) => {
+const getOne = async (req, res, next) => {
   try {
     const questionId = Number(req.params.id);
 
-    if (Number.isNaN(questionId)) {
+    if (!Number.isInteger(questionId) || questionId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid question ID"
@@ -81,8 +71,6 @@ const getOne = async (req, res) => {
       data: question
     });
   } catch (error) {
-    console.error("Get question error:", error);
-
     if (error.message === "Question not found") {
       return res.status(404).json({
         success: false,
@@ -90,18 +78,15 @@ const getOne = async (req, res) => {
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    next(error);
   }
 };
 
-const update = async (req, res) => {
+const update = async (req, res, next) => {
   try {
     const questionId = Number(req.params.id);
 
-    if (Number.isNaN(questionId)) {
+    if (!Number.isInteger(questionId) || questionId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid question ID"
@@ -124,8 +109,6 @@ const update = async (req, res) => {
       data: question
     });
   } catch (error) {
-    console.error("Update question error:", error);
-
     if (error.name === "ZodError") {
       return res.status(400).json({
         success: false,
@@ -134,31 +117,32 @@ const update = async (req, res) => {
       });
     }
 
-    if (
-      error.message === "Question not found" ||
-      error.message ===
-        "You are not authorized to update this question"
-    ) {
-      return res.status(
-        error.message === "Question not found" ? 404 : 403
-      ).json({
+    if (error.message === "Question not found") {
+      return res.status(404).json({
         success: false,
         message: error.message
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    if (
+      error.message ===
+      "You are not authorized to update this question"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    next(error);
   }
 };
 
-const remove = async (req, res) => {
+const remove = async (req, res, next) => {
   try {
     const questionId = Number(req.params.id);
 
-    if (Number.isNaN(questionId)) {
+    if (!Number.isInteger(questionId) || questionId <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid question ID"
@@ -177,25 +161,24 @@ const remove = async (req, res) => {
       message: "Question deleted successfully"
     });
   } catch (error) {
-    console.error("Delete question error:", error);
-
-    if (
-      error.message === "Question not found" ||
-      error.message ===
-        "You are not authorized to delete this question"
-    ) {
-      return res.status(
-        error.message === "Question not found" ? 404 : 403
-      ).json({
+    if (error.message === "Question not found") {
+      return res.status(404).json({
         success: false,
         message: error.message
       });
     }
 
-    res.status(500).json({
-      success: false,
-      message: "Internal server error"
-    });
+    if (
+      error.message ===
+      "You are not authorized to delete this question"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    next(error);
   }
 };
 
