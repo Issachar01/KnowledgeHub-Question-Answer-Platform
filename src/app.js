@@ -3,6 +3,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const dotenv = require("dotenv");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
+
 dotenv.config();
 
 const prisma = require("./config/prisma");
@@ -21,6 +24,12 @@ app.use(cors());
 
 // Parse JSON
 app.use(express.json());
+//swagger
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Test route
 app.get("/", (req, res) => {
