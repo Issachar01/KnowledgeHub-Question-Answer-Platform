@@ -15,6 +15,16 @@ const options = {
           : 'http://localhost:5000',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
   },
   apis: ['./src/routes/*.js'],
 };
