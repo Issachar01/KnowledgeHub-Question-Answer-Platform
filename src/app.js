@@ -19,6 +19,7 @@ const tagRoutes = require('./routes/tagRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const searchRoutes = require("./routes/searchRoutes");
+const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec)
 );
+
+app.use('/api', apiLimiter)
 
 // Test route
 app.get("/", (req, res) => {

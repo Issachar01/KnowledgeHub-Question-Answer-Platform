@@ -1,13 +1,18 @@
+// src/routes/authRoutes.js
 const express = require("express");
 
 const {
   register,
   login,
   refresh,
-  logout
+  logout,
+  verifyEmail,
+  forgotPassword,
+  resetPassword
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
+const { authLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
@@ -31,11 +36,11 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
- *                 example: Saron Hailemeskel
+ *                 example: Yisacor Dereje
  *               email:
  *                 type: string
  *                 format: email
- *                 example: saron@example.com
+ *                 example: yisacor@example.com
  *               password:
  *                 type: string
  *                 format: password
@@ -48,7 +53,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post("/register", register);
+router.post("/register", authLimiter, register);
 
 /**
  * @swagger
@@ -70,7 +75,7 @@ router.post("/register", register);
  *               email:
  *                 type: string
  *                 format: email
- *                 example: saron@example.com
+ *                 example: yisacor@example.com
  *               password:
  *                 type: string
  *                 format: password
@@ -82,10 +87,12 @@ router.post("/register", register);
  *         description: Validation error
  *       401:
  *         description: Invalid credentials
+ *       403:
+ *         description: Email not verified
  *       500:
  *         description: Internal server error
  */
-router.post("/login", login);
+router.post("/login", authLimiter, login);
 
 /**
  * @swagger
@@ -144,6 +151,84 @@ router.post("/refresh", refresh);
  *         description: Internal server error
  */
 router.post("/logout", logout);
+
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   get:
+ *     summary: Verify email address
+ *     description: Marks user account as verified using the email token.
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or missing token
+ */
+router.get("/verify-email", verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset link
+ *     description: Sends a password reset token to the user's email.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Password reset link sent
+ *       404:
+ *         description: User not found
+ */
+router.post("/forgot-password", authLimiter, forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password
+ *     description: Updates password using the reset token.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post("/reset-password", authLimiter, resetPassword);
 
 /**
  * @swagger

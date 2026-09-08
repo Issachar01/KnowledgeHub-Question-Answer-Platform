@@ -19,18 +19,20 @@ enum VoteType {
 }
 
 model User {
-  id                Int            @id @default(autoincrement())
-  name              String
-  email             String         @unique
-  password          String
-  isVerified        Boolean        @default(false)
-  verificationToken String?
-  bio               String?
-  profileImage      String?
-  role              Role           @default(USER)
-  reputation        Int            @default(0)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  email                String    @unique
+  password             String
+  isVerified           Boolean   @default(false)
+  verificationToken    String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  bio                  String?
+  profileImage         String?
+  role                 Role      @default(USER)
+  reputation           Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   questions     Question[]
   answers       Answer[]
@@ -113,12 +115,10 @@ model Vote {
 }
 
 model Tag {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
   questionTags QuestionTag[]
-  questions    Question[] @relation(through: QuestionTag) // Optional convenience field
 }
 
 model QuestionTag {
