@@ -118,6 +118,7 @@ model Tag {
   createdAt DateTime @default(now())
 
   questionTags QuestionTag[]
+  questions    Question[] @relation(through: QuestionTag) // Optional convenience field
 }
 
 model QuestionTag {

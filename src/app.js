@@ -18,6 +18,8 @@ const questionRoutes = require('./routes/questionRoutes')
 const tagRoutes = require('./routes/tagRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
 const adminRoutes = require('./routes/adminRoutes')
+const searchRoutes = require("./routes/searchRoutes");
+
 const app = express();
 
 // Security
@@ -78,9 +80,8 @@ app.use('/api', notificationRoutes);
 app.use("/api/questions", questionRoutes);
 // admin routes
 app.use('/api/admin', adminRoutes)
-
-
-
+// search routes
+app.use("/api/search", searchRoutes);
 // Tag routes
 app.use("/api/tags", tagRoutes);
 
