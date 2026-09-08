@@ -1,5 +1,8 @@
 const {
-  getUserProfile , updateUserProfile, uploadProfileImage
+  getUserProfile,
+  getPublicUserProfile,
+  updateUserProfile,
+  uploadProfileImage
 } = require("../services/userService");
 
 const {
@@ -18,6 +21,41 @@ const getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get profile error:", error);
+
+    if (error.message === "User not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Get public user profile by ID
+const getPublicProfile = async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID"
+      });
+    }
+
+    const user = await getPublicUserProfile(userId);
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error("Get public profile error:", error);
 
     if (error.message === "User not found") {
       return res.status(404).json({
@@ -97,8 +135,10 @@ const uploadProfile = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   getProfile,
+  getPublicProfile,
   updateProfile,
   uploadProfile
 };
