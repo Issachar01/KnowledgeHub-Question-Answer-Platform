@@ -21,8 +21,9 @@ const options = {
 
 const specs = swaggerJsdoc(options);
 
-// Force inject the openapi version if the parser drops it
-specs.openapi = specs.openapi || '3.0.0';
+// Force stamp it so it cannot be stripped
+specs.openapi = '3.0.0';
+console.log('Generated Swagger Spec:', JSON.stringify(specs, null, 2));
 
 module.exports = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
