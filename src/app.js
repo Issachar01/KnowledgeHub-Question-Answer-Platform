@@ -19,7 +19,7 @@ const tagRoutes = require('./routes/tagRoutes')
 const notificationRoutes = require('./routes/notificationRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const searchRoutes = require("./routes/searchRoutes");
-const { apiLimiter } = require("./middleware/rateLimiter");
+const { apiLimiter, authLimiter } = require("./middleware/rateLimiter");
 const moderatorRoutes = require('./routes/moderatorRoutes');
 
 const app = express();
