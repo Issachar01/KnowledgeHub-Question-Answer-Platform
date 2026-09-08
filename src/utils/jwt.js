@@ -6,7 +6,7 @@ const generateAccessToken = (user) => {
       userId: user.id,
       role: user.role
     },
-    process.env.JWT_SECRET,
+    process.env.JWT_ACCESS_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRES_IN || "15m"
     }
@@ -14,7 +14,7 @@ const generateAccessToken = (user) => {
 };
 
 const verifyAccessToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET);
+  return jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 };
 
 module.exports = {

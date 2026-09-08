@@ -93,7 +93,7 @@ model Comment {
 
 model Vote {
   id          Int       @id @default(autoincrement())
-  type        VoteType
+  type        VoteType  @default(UPVOTE)
   userId      Int
   questionId  Int?
   answerId    Int?

@@ -1,0 +1,85 @@
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzg4ODUwNDkyLCJleHAiOjE3ODg4NTEzOTJ9.wcDgxP13rAlPuPA540E_3Bmjf5AMACjqDSZ17HErMnA
+@questionId = 2
+@answerId = 6
+@commentId = 3
+
+### Register
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "issachardereje010@gmail.com",
+    "password": "Hiwot@321"
+}
+
+### Refresh
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+    "refreshToken": "b84dd2cddf593b44af96bf1e07e8c91aeed5bcbee59253587a0759eb9c2383e51b000a5dea72b8c8f0039bdda2ce43c2559c6d81f0f9bfcb578609eeeeac730e"
+}
+
+### 1. Create Answer
+POST {{baseUrl}}/questions/{{questionId}}/answers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "This is a test answer for the question."
+}
+
+### 2. Get Answers by Question
+GET {{baseUrl}}/questions/{{questionId}}/answers
+
+### 3. Update Answer
+PATCH {{baseUrl}}/answers/{{answerId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "This is an updated test answer."
+}
+
+### 4. Delete Answer
+DELETE {{baseUrl}}/answers/{{answerId}}
+Authorization: Bearer {{token}}
+
+### 1. Create Comment on Question
+POST {{baseUrl}}/questions/{{questionId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "This is a great question!"
+}
+
+### 2. Get Comments for a Question
+GET {{baseUrl}}/questions/{{questionId}}/comments
+
+### 3. Create Comment on Answer
+POST {{baseUrl}}/answers/{{answerId}}/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "This answer cleared up my confusion, thanks!"
+}
+
+### 4. Get Comments for an Answer
+GET {{baseUrl}}/answers/{{answerId}}/comments
+
+### 5. Update Comment
+PATCH {{baseUrl}}/comments/{{commentId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Updated comment content here."
+}
+
+### 6. Delete Comment
+DELETE {{baseUrl}}/comments/{{commentId}}
+Authorization: Bearer {{token}}
