@@ -3,6 +3,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { createNotification } = require('./notificationService');
+const { updateReputation, REPUTATION_RULES } = require('./reputationService');
 
 const createAnswer = async (questionId, content, authorId) => {
   const question = await prisma.question.findUnique({
@@ -21,6 +22,9 @@ const createAnswer = async (questionId, content, authorId) => {
       authorId
     }
   });
+
+  // Award reputation for posting an answer
+  await updateReputation(authorId, REPUTATION_RULES.POST_ANSWER);
 
   // Notify question owner if the answerer is someone else
   if (question.authorId !== authorId) {
@@ -79,9 +83,37 @@ const deleteAnswer = async (id, userId) => {
   });
 };
 
+const toggleAcceptAnswer = async (answerId, userId) => {
+  const answer = await prisma.answer.findUnique({
+    where: { id: parseInt(answerId) },
+    include: { question: true }
+  });
+
+  if (!answer) {
+    throw new Error('Answer not found');
+  }
+
+  if (answer.question.authorId !== userId) {
+    throw new Error('Only the question author can accept an answer');
+  }
+
+  const newStatus = !answer.isAccepted;
+
+  const updatedAnswer = await prisma.answer.update({
+    where: { id: parseInt(answerId) },
+    data: { isAccepted: newStatus }
+  });
+
+  const repChange = newStatus ? REPUTATION_RULES.ACCEPTED_ANSWER : REPUTATION_RULES.ACCEPTANCE_REVOKED;
+  await updateReputation(answer.authorId, repChange);
+
+  return updatedAnswer;
+};
+
 module.exports = {
   createAnswer,
   getAnswersByQuestion,
   updateAnswer,
-  deleteAnswer
+  deleteAnswer,
+  toggleAcceptAnswer
 };

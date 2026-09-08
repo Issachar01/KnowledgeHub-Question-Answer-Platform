@@ -3,6 +3,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { notifyVoteCast } = require('./notificationService');
+const { updateReputation, REPUTATION_RULES } = require('./reputationService');
 
 const castVote = async (userId, targetType, targetId, voteType) => {
   const parsedUserId = parseInt(userId, 10);
@@ -11,6 +12,8 @@ const castVote = async (userId, targetType, targetId, voteType) => {
   let targetAuthorId;
   let whereUnique;
   let dataFields;
+  let upvotePoints;
+  let downvotePoints;
 
   if (targetType === 'QUESTION') {
     const question = await prisma.question.findUnique({
@@ -21,6 +24,8 @@ const castVote = async (userId, targetType, targetId, voteType) => {
     targetAuthorId = question.authorId;
     whereUnique = { userId_questionId: { userId: parsedUserId, questionId: parsedTargetId } };
     dataFields = { questionId: parsedTargetId, answerId: null };
+    upvotePoints = REPUTATION_RULES.QUESTION_UPVOTE;
+    downvotePoints = REPUTATION_RULES.QUESTION_DOWNVOTE;
   } else if (targetType === 'ANSWER') {
     const answer = await prisma.answer.findUnique({
       where: { id: parsedTargetId },
@@ -30,6 +35,8 @@ const castVote = async (userId, targetType, targetId, voteType) => {
     targetAuthorId = answer.authorId;
     whereUnique = { userId_answerId: { userId: parsedUserId, answerId: parsedTargetId } };
     dataFields = { questionId: null, answerId: parsedTargetId };
+    upvotePoints = REPUTATION_RULES.ANSWER_UPVOTE;
+    downvotePoints = REPUTATION_RULES.ANSWER_DOWNVOTE;
   } else {
     throw new Error('Invalid target type');
   }
@@ -48,19 +55,15 @@ const castVote = async (userId, targetType, targetId, voteType) => {
   });
 
   let reputationChange = 0;
-  const repWeight = voteType === 'UPVOTE' ? 10 : -2;
+  const currentWeight = voteType === 'UPVOTE' ? upvotePoints : downvotePoints;
 
   if (existingVote) {
     if (existingVote.type === voteType) {
       // Toggle off (remove vote)
       await prisma.vote.delete({ where: { id: existingVote.id } });
-      reputationChange = existingVote.type === 'UPVOTE' ? -10 : 2;
+      reputationChange = existingVote.type === 'UPVOTE' ? -upvotePoints : -downvotePoints;
       
-      // Update author reputation
-      await prisma.user.update({
-        where: { id: targetAuthorId },
-        data: { reputation: { increment: reputationChange } }
-      });
+      await updateReputation(targetAuthorId, reputationChange);
 
       return { message: 'Vote removed successfully', action: 'DELETED' };
     } else {
@@ -70,12 +73,12 @@ const castVote = async (userId, targetType, targetId, voteType) => {
         data: { type: voteType }
       });
       
-      // Swapping from up to down is a swing of -12, down to up is +12
-      reputationChange = voteType === 'UPVOTE' ? 12 : -12;
-      await prisma.user.update({
-        where: { id: targetAuthorId },
-        data: { reputation: { increment: reputationChange } }
-      });
+      // Calculate net difference when swapping vote types
+      const oldWeight = existingVote.type === 'UPVOTE' ? upvotePoints : downvotePoints;
+      const newWeight = voteType === 'UPVOTE' ? upvotePoints : downvotePoints;
+      reputationChange = newWeight - oldWeight;
+
+      await updateReputation(targetAuthorId, reputationChange);
 
       if (voteType === 'UPVOTE') {
         await notifyVoteCast({
@@ -99,10 +102,7 @@ const castVote = async (userId, targetType, targetId, voteType) => {
     }
   });
 
-  await prisma.user.update({
-    where: { id: targetAuthorId },
-    data: { reputation: { increment: repWeight } }
-  });
+  await updateReputation(targetAuthorId, currentWeight);
 
   if (voteType === 'UPVOTE') {
     await notifyVoteCast({
