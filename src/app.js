@@ -14,7 +14,8 @@ const userRoutes = require("./routes/userRoutes");
 const answerRoutes = require('./routes/answerRoutes');
 const commentRoutes = require("./routes/commentRoutes");
 const voteRoutes = require('./routes/voteRoutes')
-
+const questionRoutes = require('./routes/questionRoutes')
+const tagRoutes = require('./routes/tagRoutes')
 const app = express();
 
 // Security

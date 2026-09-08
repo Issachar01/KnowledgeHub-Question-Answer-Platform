@@ -2,7 +2,8 @@ const {
   getUserProfile,
   getPublicUserProfile,
   updateUserProfile,
-  uploadProfileImage
+  uploadProfileImage,
+  getLeaderboardUsers
 } = require("../services/userService");
 
 const {
@@ -12,7 +13,6 @@ const {
 const getProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-
     const user = await getUserProfile(userId);
 
     res.status(200).json({
@@ -36,7 +36,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// Get public user profile by ID
 const getPublicProfile = async (req, res) => {
   try {
     const userId = Number(req.params.id);
@@ -74,13 +73,9 @@ const getPublicProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const validatedData = updateProfileSchema.parse(req.body);
-
     const userId = req.user.userId;
 
-    const user = await updateUserProfile(
-      userId,
-      validatedData
-    );
+    const user = await updateUserProfile(userId, validatedData);
 
     res.status(200).json({
       success: true,
@@ -116,10 +111,7 @@ const uploadProfile = async (req, res) => {
       });
     }
 
-    const user = await uploadProfileImage(
-      userId,
-      req.file
-    );
+    const user = await uploadProfileImage(userId, req.file);
 
     res.status(200).json({
       success: true,
@@ -136,9 +128,28 @@ const uploadProfile = async (req, res) => {
   }
 };
 
+const getLeaderboard = async (req, res) => {
+  try {
+    const users = await getLeaderboardUsers();
+
+    res.status(200).json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error("Get leaderboard error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
 module.exports = {
   getProfile,
   getPublicProfile,
   updateProfile,
-  uploadProfile
+  uploadProfile,
+  getLeaderboard
 };

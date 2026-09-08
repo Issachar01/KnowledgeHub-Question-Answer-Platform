@@ -1,12 +1,9 @@
 const prisma = require("../config/prisma");
-
 const cloudinary = require("../config/cloudinary");
 
 const getUserProfile = async (userId) => {
   const user = await prisma.user.findUnique({
-    where: {
-      id: userId
-    },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -27,12 +24,9 @@ const getUserProfile = async (userId) => {
   return user;
 };
 
-// Get a public user profile by ID
 const getPublicUserProfile = async (userId) => {
   const user = await prisma.user.findUnique({
-    where: {
-      id: userId
-    },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -52,9 +46,7 @@ const getPublicUserProfile = async (userId) => {
 
 const updateUserProfile = async (userId, data) => {
   const user = await prisma.user.update({
-    where: {
-      id: userId
-    },
+    where: { id: userId },
     data,
     select: {
       id: true,
@@ -84,11 +76,8 @@ const uploadProfileImage = async (userId, file) => {
         resource_type: "image"
       },
       (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
+        if (error) reject(error);
+        else resolve(result);
       }
     );
 
@@ -96,12 +85,8 @@ const uploadProfileImage = async (userId, file) => {
   });
 
   const user = await prisma.user.update({
-    where: {
-      id: userId
-    },
-    data: {
-      profileImage: uploadResult.secure_url
-    },
+    where: { id: userId },
+    data: { profileImage: uploadResult.secure_url },
     select: {
       id: true,
       name: true,
@@ -118,9 +103,29 @@ const uploadProfileImage = async (userId, file) => {
   return user;
 };
 
+const getLeaderboardUsers = async (limit = 10) => {
+  const users = await prisma.user.findMany({
+    take: limit,
+    orderBy: {
+      reputation: 'desc'
+    },
+    select: {
+      id: true,
+      name: true,
+      bio: true,
+      profileImage: true,
+      reputation: true,
+      createdAt: true
+    }
+  });
+
+  return users;
+};
+
 module.exports = {
   getUserProfile,
   getPublicUserProfile,
   updateUserProfile,
-  uploadProfileImage
+  uploadProfileImage,
+  getLeaderboardUsers
 };

@@ -4,7 +4,8 @@ const {
   getProfile,
   getPublicProfile,
   updateProfile,
-  uploadProfile
+  uploadProfile,
+  getLeaderboard
 } = require("../controllers/userController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -32,6 +33,22 @@ router.get(
   "/profile",
   authMiddleware,
   getProfile
+);
+
+/**
+ * @swagger
+ * /api/users/leaderboard:
+ *   get:
+ *     summary: Get user leaderboard
+ *     description: Returns top users ordered by reputation.
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: Leaderboard retrieved successfully
+ */
+router.get(
+  "/leaderboard",
+  getLeaderboard
 );
 
 /**
