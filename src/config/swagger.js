@@ -1,30 +1,27 @@
-const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
 
-const rawSpec = {
-  openapi: '3.0.0',
-  info: {
-    title: 'KnowledgeHub API Test',
-    version: '1.0.0'
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'KnowledgeHub API',
+      version: '1.0.0',
+      description: 'API documentation for KnowledgeHub Q&A Platform',
+    },
+    servers: [
+      {
+        url: process.env.NODE_ENV === 'production'
+          ? 'https://knowledgehub-backend-8bby.onrender.com'
+          : 'http://localhost:5000',
+      },
+    ],
   },
-  servers: [
-    {
-      url: 'https://knowledgehub-backend-8bby.onrender.com'
-    }
-  ],
-  paths: {
-    '/': {
-      get: {
-        summary: 'Test endpoint',
-        responses: {
-          '200': {
-            description: 'Success'
-          }
-        }
-      }
-    }
-  }
+  apis: ['./src/routes/*.js'],
 };
 
-module.exports = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(rawSpec));
-};
+const swaggerSpec = swaggerJsdoc(options);
+
+// Force stamp it to guarantee the version field exists
+swaggerSpec.openapi = '3.0.0';
+
+module.exports = swaggerSpec;
