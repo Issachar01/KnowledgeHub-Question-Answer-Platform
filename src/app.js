@@ -12,7 +12,8 @@ const prisma = require("./config/prisma");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const answerRoutes = require('./routes/answerRoutes');
-const commentRoutes = require("./routes/commentRoutes")
+const commentRoutes = require("./routes/commentRoutes");
+const voteRoutes = require('./routes/voteRoutes')
 
 const app = express();
 
@@ -66,6 +67,8 @@ app.use("/api/users", userRoutes);
 app.use('/api', answerRoutes);
 //comment routes
 app.use('/api', commentRoutes);
+//vote routes
+app.use('/api', voteRoutes)
 
 // Question routes
 app.use("/api/questions", questionRoutes);
