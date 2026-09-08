@@ -4,16 +4,26 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { createNotification } = require('./notificationService');
 const { updateReputation, REPUTATION_RULES } = require('./reputationService');
+const { sendAnswerNotificationEmail, sendAcceptedAnswerEmail } = require('./emailService');
 
 const createAnswer = async (questionId, content, authorId) => {
   const question = await prisma.question.findUnique({
     where: { id: parseInt(questionId) },
-    select: { authorId: true, title: true }
+    select: { 
+      authorId: true, 
+      title: true,
+      author: { select: { email: true, name: true } }
+    }
   });
 
   if (!question) {
     throw new Error('Question not found');
   }
+
+  const answerer = await prisma.user.findUnique({
+    where: { id: authorId },
+    select: { name: true }
+  });
 
   const newAnswer = await prisma.answer.create({
     data: {
@@ -34,6 +44,13 @@ const createAnswer = async (questionId, content, authorId) => {
       message: `Someone answered your question: "${question.title.substring(0, 30)}..."`,
       referenceId: newAnswer.id
     });
+
+    // Send email notification to question owner
+    await sendAnswerNotificationEmail(
+      question.author.email,
+      question.title,
+      answerer.name
+    ).catch(err => console.error("Failed to send answer email:", err));
   }
 
   return newAnswer;
@@ -86,7 +103,10 @@ const deleteAnswer = async (id, userId) => {
 const toggleAcceptAnswer = async (answerId, userId) => {
   const answer = await prisma.answer.findUnique({
     where: { id: parseInt(answerId) },
-    include: { question: true }
+    include: { 
+      question: true,
+      author: { select: { email: true } }
+    }
   });
 
   if (!answer) {
@@ -106,6 +126,14 @@ const toggleAcceptAnswer = async (answerId, userId) => {
 
   const repChange = newStatus ? REPUTATION_RULES.ACCEPTED_ANSWER : REPUTATION_RULES.ACCEPTANCE_REVOKED;
   await updateReputation(answer.authorId, repChange);
+
+  // Send email if the answer was marked as accepted
+  if (newStatus) {
+    await sendAcceptedAnswerEmail(
+      answer.author.email,
+      answer.question.title
+    ).catch(err => console.error("Failed to send accepted answer email:", err));
+  }
 
   return updatedAnswer;
 };

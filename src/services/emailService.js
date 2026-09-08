@@ -1,4 +1,5 @@
 // src/services/emailService.js
+
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
@@ -41,7 +42,35 @@ const sendPasswordResetEmail = async (email, token) => {
   });
 };
 
+const sendAnswerNotificationEmail = async (email, questionTitle, answererName) => {
+  await transporter.sendMail({
+    from: `"KnowledgeHub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "New Answer on Your Question",
+    html: `
+      <h2>New Answer</h2>
+      <p><strong>${answererName}</strong> has answered your question: "${questionTitle}".</p>
+      <a href="${process.env.FRONTEND_URL}/questions">View Question</a>
+    `
+  });
+};
+
+const sendAcceptedAnswerEmail = async (email, questionTitle) => {
+  await transporter.sendMail({
+    from: `"KnowledgeHub" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Your Answer Was Accepted!",
+    html: `
+      <h2>Answer Accepted!</h2>
+      <p>Your answer for the question "${questionTitle}" has been marked as accepted.</p>
+      <a href="${process.env.FRONTEND_URL}/questions">View Question</a>
+    `
+  });
+};
+
 module.exports = {
   sendVerificationEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendAnswerNotificationEmail,
+  sendAcceptedAnswerEmail
 };

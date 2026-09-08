@@ -20,6 +20,7 @@ const notificationRoutes = require('./routes/notificationRoutes')
 const adminRoutes = require('./routes/adminRoutes')
 const searchRoutes = require("./routes/searchRoutes");
 const { apiLimiter } = require("./middleware/rateLimiter");
+const moderatorRoutes = require('./routes/moderatorRoutes');
 
 const app = express();
 
@@ -87,5 +88,8 @@ app.use('/api/admin', adminRoutes)
 app.use("/api/search", searchRoutes);
 // Tag routes
 app.use("/api/tags", tagRoutes);
+// Moderator routes
+app.use('/api/moderator', moderatorRoutes);
+
 
 module.exports = app;

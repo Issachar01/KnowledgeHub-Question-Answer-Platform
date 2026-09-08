@@ -19,27 +19,30 @@ enum VoteType {
 }
 
 model User {
-  id                   Int       @id @default(autoincrement())
-  name                 String
-  email                String    @unique
-  password             String
-  isVerified           Boolean   @default(false)
-  verificationToken    String?
-  resetPasswordToken   String?
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  password           String
+  isVerified         Boolean   @default(false)
+  isBanned           Boolean   @default(false)
+  verificationToken  String?
+  resetPasswordToken String?
   resetPasswordExpires DateTime?
-  bio                  String?
-  profileImage         String?
-  role                 Role      @default(USER)
-  reputation           Int       @default(0)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  bio                String?
+  profileImage       String?
+  role               Role      @default(USER)
+  reputation         Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  questions     Question[]
-  answers       Answer[]
-  comments      Comment[]
-  votes         Vote[]
-  refreshTokens RefreshToken[]
-  notifications Notification[]
+  questions        Question[]
+  answers          Answer[]
+  comments         Comment[]
+  votes            Vote[]
+  refreshTokens    RefreshToken[]
+  notifications    Notification[]
+  reportsReported  Report[]       @relation("Reporter")
+  reportsReceived  Report[]       @relation("ReportedUser")
 }
 
 model Question {
@@ -156,4 +159,20 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Report {
+  id             Int      @id @default(autoincrement())
+  reason         String
+  contentType    String   // "QUESTION", "ANSWER", "COMMENT", "USER"
+  contentId      Int
+  reporterId     Int
+  reporter       User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId Int?
+  reportedUser   User?    @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  status         String   @default("PENDING") // "PENDING", "RESOLVED", "DISMISSED"
+  createdAt      DateTime @default(now())
+
+  @@index([reporterId])
+  @@index([reportedUserId])
 }
