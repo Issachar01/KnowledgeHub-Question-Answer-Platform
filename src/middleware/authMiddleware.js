@@ -1,3 +1,4 @@
+// src/middleware/authMiddleware.js
 const { verifyAccessToken } = require("../utils/jwt");
 
 const authMiddleware = (req, res, next) => {
@@ -42,5 +43,22 @@ const authMiddleware = (req, res, next) => {
     });
   }
 };
+
+const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === "ADMIN") {
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: "Access denied. Admin privileges required."
+  });
+};
+
+// Dual-compatibility export:
+// 1. Works when required directly as a function (e.g. const authMiddleware = require(...))
+// 2. Works when destructured as properties (e.g. const { protect, adminOnly } = require(...))
+authMiddleware.protect = authMiddleware;
+authMiddleware.adminOnly = adminOnly;
+authMiddleware.authMiddleware = authMiddleware;
 
 module.exports = authMiddleware;

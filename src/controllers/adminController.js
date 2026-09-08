@@ -1,68 +1,164 @@
-// controllers/adminController.js
-const { PrismaClient } = require('@prisma/client');
+// src/controllers/adminController.js
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, reputation: true, createdAt: true, isBlocked: true }
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        reputation: true,
+        createdAt: true,
+        isVerified: true, // Replaced non-existent isBlocked with isVerified
+        updatedAt: true
+      }
     });
-    res.status(200).json({ success: true, data: users });
+
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users
+    });
   } catch (error) {
-    next(error);
+    console.error("Get all users error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error"
+    });
   }
 };
 
 const toggleUserBlock = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const userId = parseInt(id, 10);
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: { isBlocked: !user.isBlocked }
+    if (isNaN(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID format"
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
     });
 
-    res.status(200).json({ success: true, message: `User status updated to blocked: ${updated.isBlocked}` });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Toggle isVerified status as the block/active mechanism
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { isVerified: !user.isVerified },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isVerified: true
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User status updated successfully",
+      data: updatedUser
+    });
   } catch (error) {
-    next(error);
+    console.error("Toggle user block error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error"
+    });
   }
 };
 
 const deleteInappropriateContent = async (req, res, next) => {
   try {
-    const { type, id } = req.params; // type: 'question' or 'answer'
-    if (type === 'question') {
-      await prisma.question.delete({ where: { id } });
-    } else if (type === 'answer') {
-      await prisma.answer.delete({ where: { id } });
-    } else {
-      return res.status(400).json({ error: 'Invalid content type' });
+    const { type, id } = req.params;
+    const contentId = parseInt(id, 10);
+
+    if (isNaN(contentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid content ID format"
+      });
     }
 
-    res.status(200).json({ success: true, message: 'Content removed by admin' });
+    const contentType = type.toLowerCase();
+
+    if (contentType === "question" || contentType === "questions") {
+      await prisma.question.delete({ where: { id: contentId } });
+    } else if (contentType === "answer" || contentType === "answers") {
+      await prisma.answer.delete({ where: { id: contentId } });
+    } else if (contentType === "comment" || contentType === "comments") {
+      await prisma.comment.delete({ where: { id: contentId } });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid content type. Must be question, answer, or comment."
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${contentType.toUpperCase()} deleted successfully by admin`
+    });
   } catch (error) {
-    next(error);
+    console.error("Admin delete content error:", error);
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        success: false,
+        message: "Content not found"
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error"
+    });
   }
 };
 
 const getPlatformStats = async (req, res, next) => {
   try {
-    const [users, questions, answers, tags] = await Promise.all([
+    const [totalUsers, totalQuestions, totalAnswers, totalComments, totalVotes] = await Promise.all([
       prisma.user.count(),
       prisma.question.count(),
       prisma.answer.count(),
-      prisma.tag.count()
+      prisma.comment.count(),
+      prisma.vote.count()
     ]);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      stats: { users, questions, answers, tags }
+      data: {
+        totalUsers,
+        totalQuestions,
+        totalAnswers,
+        totalComments,
+        totalVotes
+      }
     });
   } catch (error) {
-    next(error);
+    console.error("Get platform stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Internal server error"
+    });
   }
 };
 
-module.exports = { getAllUsers, toggleUserBlock, deleteInappropriateContent, getPlatformStats };
+module.exports = {
+  getAllUsers,
+  toggleUserBlock,
+  deleteInappropriateContent,
+  getPlatformStats
+};

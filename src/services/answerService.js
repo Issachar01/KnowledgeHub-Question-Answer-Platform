@@ -2,23 +2,37 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { createNotification } = require('./notificationService');
 
 const createAnswer = async (questionId, content, authorId) => {
   const question = await prisma.question.findUnique({
-    where: { id: parseInt(questionId) }
+    where: { id: parseInt(questionId) },
+    select: { authorId: true, title: true }
   });
 
   if (!question) {
     throw new Error('Question not found');
   }
 
-  return await prisma.answer.create({
+  const newAnswer = await prisma.answer.create({
     data: {
       content,
       questionId: parseInt(questionId),
       authorId
     }
   });
+
+  // Notify question owner if the answerer is someone else
+  if (question.authorId !== authorId) {
+    await createNotification({
+      userId: question.authorId,
+      type: "ANSWER",
+      message: `Someone answered your question: "${question.title.substring(0, 30)}..."`,
+      referenceId: newAnswer.id
+    });
+  }
+
+  return newAnswer;
 };
 
 const getAnswersByQuestion = async (questionId) => {

@@ -1,8 +1,7 @@
-// routes/adminRoutes.js
-// Branch: feature/admin-management
+// src/routes/adminRoutes.js
+// Branch: feature/admin-search
 
 const express = require("express");
-
 const router = express.Router();
 
 const {
@@ -12,7 +11,15 @@ const {
   getPlatformStats
 } = require("../controllers/adminController");
 
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+// Safely require auth middleware and handle different possible export structures
+const authModule = require("../middleware/authMiddleware");
+
+const protect = authModule.protect || authModule;
+const adminOnly = authModule.adminOnly || authModule.adminMiddleware;
+
+if (typeof protect !== "function" || typeof adminOnly !== "function") {
+  throw new Error("Middleware functions 'protect' and 'adminOnly' must be valid functions. Check your export structure in authMiddleware.js.");
+}
 
 router.use(protect, adminOnly);
 

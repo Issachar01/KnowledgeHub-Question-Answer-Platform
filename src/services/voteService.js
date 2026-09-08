@@ -2,6 +2,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { notifyVoteCast } = require('./notificationService');
 
 const castVote = async (userId, targetType, targetId, voteType) => {
   const parsedUserId = parseInt(userId, 10);
@@ -76,6 +77,15 @@ const castVote = async (userId, targetType, targetId, voteType) => {
         data: { reputation: { increment: reputationChange } }
       });
 
+      if (voteType === 'UPVOTE') {
+        await notifyVoteCast({
+          questionId: targetType === 'QUESTION' ? parsedTargetId : null,
+          answerId: targetType === 'ANSWER' ? parsedTargetId : null,
+          voterId: parsedUserId,
+          type: voteType
+        });
+      }
+
       return { message: 'Vote updated successfully', action: 'UPDATED', vote: updated };
     }
   }
@@ -93,6 +103,15 @@ const castVote = async (userId, targetType, targetId, voteType) => {
     where: { id: targetAuthorId },
     data: { reputation: { increment: repWeight } }
   });
+
+  if (voteType === 'UPVOTE') {
+    await notifyVoteCast({
+      questionId: targetType === 'QUESTION' ? parsedTargetId : null,
+      answerId: targetType === 'ANSWER' ? parsedTargetId : null,
+      voterId: parsedUserId,
+      type: voteType
+    });
+  }
 
   return { message: 'Vote recorded successfully', action: 'CREATED', vote: newVote };
 };
