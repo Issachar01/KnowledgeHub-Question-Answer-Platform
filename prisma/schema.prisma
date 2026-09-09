@@ -25,6 +25,7 @@ model User {
   password           String
   isVerified         Boolean   @default(false)
   isBanned           Boolean   @default(false)
+  deletedAt          DateTime? 
   verificationToken  String?
   resetPasswordToken String?
   resetPasswordExpires DateTime?
@@ -35,14 +36,14 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  questions        Question[]
-  answers          Answer[]
-  comments         Comment[]
-  votes            Vote[]
-  refreshTokens    RefreshToken[]
-  notifications    Notification[]
-  reportsReported  Report[]       @relation("Reporter")
-  reportsReceived  Report[]       @relation("ReportedUser")
+  questions          Question[]
+  answers            Answer[]
+  comments           Comment[]
+  votes              Vote[]
+  refreshTokens      RefreshToken[]
+  notifications      Notification[]
+  reportsReported    Report[]        @relation("Reporter")
+  reportsReceived    Report[]        @relation("ReportedUser")
 }
 
 model Question {

@@ -55,7 +55,7 @@ const loginUser = async ({ email, password }) => {
     }
   });
 
-  if (!user) {
+  if (!user || user.deletedAt) {
     throw new Error("Invalid email or password");
   }
 
@@ -91,6 +91,10 @@ const loginUser = async ({ email, password }) => {
 
 const refreshAccessToken = async (token) => {
   const refreshToken = await getValidRefreshToken(token);
+
+  if (refreshToken.user.deletedAt) {
+    throw new Error("Invalid refresh token");
+  }
 
   const accessToken = generateAccessToken(refreshToken.user);
 

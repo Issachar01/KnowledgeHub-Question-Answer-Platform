@@ -6,6 +6,7 @@ const router = express.Router();
 const {
   getAllUsers,
   toggleUserBlock,
+  softDeleteUser,
   deleteInappropriateContent,
   getPlatformStats
 } = require("../controllers/adminController");
@@ -20,7 +21,7 @@ router.use(authenticateToken, verifyAdmin);
  * /api/admin/users:
  *   get:
  *     summary: Get all users
- *     description: Returns all users on the platform. Admin access required.
+ *     description: Returns all active users on the platform. Admin access required.
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -68,6 +69,39 @@ router.get("/users", getAllUsers);
  *         description: Internal server error
  */
 router.patch("/users/:id/block", toggleUserBlock);
+
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   delete:
+ *     summary: Soft-delete a user
+ *     description: Marks a user account as deleted without removing historical relations. Admin access required.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: User ID
+ *         schema:
+ *           type: integer
+ *         example: 5
+ *     responses:
+ *       200:
+ *         description: User account soft-deleted successfully
+ *       400:
+ *         description: Invalid user ID
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete("/users/:id", softDeleteUser);
 
 /**
  * @swagger

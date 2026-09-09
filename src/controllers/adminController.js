@@ -5,6 +5,7 @@ const prisma = require("../config/prisma");
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await prisma.user.findMany({
+      where: { deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -43,7 +44,7 @@ const toggleUserBlock = async (req, res, next) => {
       where: { id: userId }
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       return res.status(404).json({
         success: false,
         message: "User not found"
@@ -72,6 +73,52 @@ const toggleUserBlock = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Toggle user block error:", error);
+    next(error);
+  }
+};
+
+const softDeleteUser = async (req, res, next) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID format"
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || user.deletedAt) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        deletedAt: new Date()
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        deletedAt: true
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User account soft-deleted successfully",
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error("Soft delete user error:", error);
     next(error);
   }
 };
@@ -145,7 +192,7 @@ const getPlatformStats = async (req, res, next) => {
       totalComments,
       totalVotes
     ] = await Promise.all([
-      prisma.user.count(),
+      prisma.user.count({ where: { deletedAt: null } }),
       prisma.question.count(),
       prisma.answer.count(),
       prisma.comment.count(),
@@ -171,6 +218,7 @@ const getPlatformStats = async (req, res, next) => {
 module.exports = {
   getAllUsers,
   toggleUserBlock,
+  softDeleteUser,
   deleteInappropriateContent,
   getPlatformStats
 };
