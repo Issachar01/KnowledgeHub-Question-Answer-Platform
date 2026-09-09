@@ -17,6 +17,7 @@ const authenticateToken = require('../middleware/authMiddleware');
  *   post:
  *     summary: Add a comment to a question
  *     description: Creates a new comment under a specific question.
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -50,6 +51,7 @@ const authenticateToken = require('../middleware/authMiddleware');
  *   get:
  *     summary: Get comments for a question
  *     description: Retrieves all comments associated with a specific question.
+ *     tags: [Comments]
  *     parameters:
  *       - in: path
  *         name: questionId
@@ -72,6 +74,7 @@ router.get('/questions/:questionId/comments', getQuestionComments);
  *   post:
  *     summary: Add a comment to an answer
  *     description: Creates a new comment under a specific answer.
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -105,6 +108,7 @@ router.get('/questions/:questionId/comments', getQuestionComments);
  *   get:
  *     summary: Get comments for an answer
  *     description: Retrieves all comments associated with a specific answer.
+ *     tags: [Comments]
  *     parameters:
  *       - in: path
  *         name: answerId
@@ -127,6 +131,7 @@ router.get('/answers/:answerId/comments', getAnswerComments);
  *   patch:
  *     summary: Update a comment
  *     description: Updates the content of an existing comment. Only the original author can edit it.
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -162,6 +167,7 @@ router.get('/answers/:answerId/comments', getAnswerComments);
  *   delete:
  *     summary: Delete a comment
  *     description: Deletes an existing comment. Only the original author can delete it.
+ *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
  *     parameters:

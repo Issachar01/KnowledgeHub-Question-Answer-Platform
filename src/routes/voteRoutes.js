@@ -11,6 +11,7 @@ const authenticateToken = require('../middleware/authMiddleware');
  *   post:
  *     summary: Vote on a question
  *     description: Casts an upvote (1) or downvote (-1) on a specified question. If the vote already exists, it updates or removes it.
+ *     tags: [Votes]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -51,6 +52,7 @@ router.post('/questions/:questionId/votes', authenticateToken, voteOnQuestion);
  *   post:
  *     summary: Vote on an answer
  *     description: Casts an upvote (1) or downvote (-1) on a specified answer.
+ *     tags: [Votes]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -83,6 +85,6 @@ router.post('/questions/:questionId/votes', authenticateToken, voteOnQuestion);
  *       500:
  *         description: Internal server error
  */
-router.post('/answers/:answerId/votes', authenticateToken, voteOnAnswer);
+router.post('/answers/{answerId}/votes', authenticateToken, voteOnAnswer);
 
 module.exports = router;

@@ -14,6 +14,7 @@ const router = express.Router();
  *   get:
  *     summary: Get user notifications
  *     description: Retrieves all notifications for the authenticated user.
+ *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -32,6 +33,7 @@ router.get("/notifications", authMiddleware, getNotifications);
  *   patch:
  *     summary: Update notification status
  *     description: Marks a specific notification as read or updates its status.
+ *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
  *     parameters:

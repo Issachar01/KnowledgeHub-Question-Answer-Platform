@@ -17,6 +17,7 @@ const authenticateToken = require('../middleware/authMiddleware');
  *   post:
  *     summary: Create a new answer
  *     description: Posts an answer to a specific question. Requires authentication.
+ *     tags: [Answers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -50,6 +51,7 @@ const authenticateToken = require('../middleware/authMiddleware');
  *   get:
  *     summary: Get all answers for a question
  *     description: Retrieves a list of all answers associated with a specific question.
+ *     tags: [Answers]
  *     parameters:
  *       - in: path
  *         name: questionId
@@ -72,6 +74,7 @@ router.get('/questions/:questionId/answers', getAnswersByQuestion);
  *   patch:
  *     summary: Update an answer
  *     description: Updates the content of an existing answer. Only the author can update it.
+ *     tags: [Answers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -107,6 +110,7 @@ router.get('/questions/:questionId/answers', getAnswersByQuestion);
  *   delete:
  *     summary: Delete an answer
  *     description: Deletes an existing answer. Only the author can delete it.
+ *     tags: [Answers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -137,6 +141,7 @@ router.delete('/answers/:id', authenticateToken, deleteAnswer);
  *   patch:
  *     summary: Toggle accepted status of an answer
  *     description: Marks or unmarks an answer as accepted. Only the author of the parent question can perform this action.
+ *     tags: [Answers]
  *     security:
  *       - bearerAuth: []
  *     parameters:
